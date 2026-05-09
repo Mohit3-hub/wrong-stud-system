@@ -1,1 +1,45 @@
+body {
+    margin: 0;
+    padding: 0;
+    font-family: Arial, sans-serif;
+}
 
+.splash-body {
+    background-color: #101820;
+    color: white;
+}
+
+.splash-container {
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.main-title {
+    font-size: 42px;
+    font-weight: bold;
+    margin-bottom: 20px;
+}
+
+.sub-title {
+    font-size: 22px;
+    color: #00d084;
+    margin-bottom: 40px;
+}
+
+.loader {
+    width: 60px;
+    height: 60px;
+    border: 6px solid #ffffff33;
+    border-top-color: #00d084;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin: auto;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
