@@ -49,6 +49,20 @@ async function verifyStud() {
 
     console.log(extractedText);
 
+ocrResult.innerHTML = `
+    <div style="
+        background:#2b313d;
+        padding:20px;
+        border-radius:10px;
+        margin-bottom:20px;
+        text-align:left;
+        white-space:pre-wrap;
+    ">
+        <h4>OCR TEXT</h4>
+        ${extractedText}
+    </div>
+`;
+
     // Normalize text
     const normalizedText =
         extractedText
@@ -68,7 +82,7 @@ async function verifyStud() {
 
     if (isMatched) {
 
-        ocrResult.innerHTML = `
+        ocrResult.innerHTML += `
             <div class="success-box">
                 <h2>CORRECT STUD</h2>
                 <p>${expectedPart}</p>
@@ -77,7 +91,7 @@ async function verifyStud() {
 
     } else {
 
-        ocrResult.innerHTML = `
+        ocrResult.innerHTML += `
             <div class="error-box">
                 <h2>WRONG STUD</h2>
                 <p>Expected:
