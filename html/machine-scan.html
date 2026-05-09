@@ -1,1 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Machine Scan</title>
 
+    <!-- Bootstrap -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+
+<body class="machine-body">
+
+    <div class="container">
+
+        <div class="machine-card">
+
+            <h1 class="machine-title">
+                Tucker Machine Verification
+            </h1>
+
+            <p class="machine-subtitle">
+                Enter or Scan Machine QR
+            </p>
+
+            <input
+                type="text"
+                id="machineId"
+                class="form-control machine-input"
+                placeholder="Example: TK01"
+            >
+
+            <button class="btn machine-button"
+                onclick="verifyMachine()">
+                VERIFY MACHINE
+            </button>
+
+            <div id="machineInfo" class="machine-info"></div>
+
+            <div id="machineError" class="error-message"></div>
+
+        </div>
+
+    </div>
+
+    <script src="../js/machine.js"></script>
+
+</body>
+</html>
