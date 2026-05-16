@@ -66,21 +66,19 @@ image.onload = async function () {
 
     const data = imageData.data;
 
-    for (let i = 0; i < data.length; i += 4) {
+for (let i = 0; i < data.length; i += 4) {
 
-        const avg =
-            (
-                data[i] +
-                data[i + 1] +
-                data[i + 2]
-            ) / 3;
+    const avg =
+        (
+            data[i] +
+            data[i + 1] +
+            data[i + 2]
+        ) / 3;
 
-        const value = avg > 140 ? 255 : 0;
-
-        data[i] = value;
-        data[i + 1] = value;
-        data[i + 2] = value;
-    }
+    data[i] = avg;
+    data[i + 1] = avg;
+    data[i + 2] = avg;
+}
 
     ctx.putImageData(imageData, 0, 0);
 
