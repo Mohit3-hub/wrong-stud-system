@@ -37,167 +37,119 @@ async function verifyStud() {
     const imageFile =
         imageInput.files[0];
 
-    // OCR Processing
-const image = new Image();
+    // Create image
+    const image = new Image();
 
-image.src = URL.createObjectURL(imageFile);
+    image.src = URL.createObjectURL(imageFile);
 
-image.onload = async function () {
+    image.onload = async function () {
 
-    // Create canvas
-    const canvas = document.createElement("canvas");
+        // Create canvas
+        const canvas =
+            document.createElement("canvas");
 
-    const ctx = canvas.getContext("2d");
+        const ctx =
+            canvas.getContext("2d");
 
-    canvas.width = image.width;
-    canvas.height = image.height;
+        canvas.width = image.width;
+        canvas.height = image.height;
 
-    // Draw image
-    ctx.drawImage(image, 0, 0);
+        // Draw image
+        ctx.drawImage(image, 0, 0);
 
-    // Convert to grayscale
-    const imageData =
-        ctx.getImageData(
-            0,
-            0,
-            canvas.width,
-            canvas.height
-        );
+        // Convert to grayscale
+        const imageData =
+            ctx.getImageData(
+                0,
+                0,
+                canvas.width,
+                canvas.height
+            );
 
-    const data = imageData.data;
+        const data = imageData.data;
 
-for (let i = 0; i < data.length; i += 4) {
+        for (let i = 0; i < data.length; i += 4) {
 
-    const avg =
-        (
-            data[i] +
-            data[i + 1] +
-            data[i + 2]
-        ) / 3;
+            const avg =
+                (
+                    data[i] +
+                    data[i + 1] +
+                    data[i + 2]
+                ) / 3;
 
-    data[i] = avg;
-    data[i + 1] = avg;
-    data[i + 2] = avg;
-}
+            data[i] = avg;
+            data[i + 1] = avg;
+            data[i + 2] = avg;
+        }
 
-    ctx.putImageData(imageData, 0, 0);
+        ctx.putImageData(imageData, 0, 0);
 
-    // OCR
-    const result =
-        await Tesseract.recognize(
-            canvas,
-            "eng"
-        );
+        // OCR
+        const result =
+            await Tesseract.recognize(
+                canvas,
+                "eng"
+            );
 
-    const extractedText =
-        result.data.text;
+        const extractedText =
+            result.data.text;
 
-    console.log(extractedText);
+        console.log(extractedText);
 
-    ocrResult.innerHTML = `
-        <div style="
-            background:#2b313d;
-            padding:20px;
-            border-radius:10px;
-            margin-bottom:20px;
-            text-align:left;
-            white-space:pre-wrap;
-        ">
-            <h4>OCR TEXT</h4>
-            ${extractedText}
-        </div>
-    `;
-
-    // Normalize
-    const normalizedText =
-        extractedText
-            .replace(/\s/g, "")
-            .toUpperCase();
-
-    const normalizedExpected =
-        expectedPart
-            .replace(/\s/g, "")
-            .toUpperCase();
-
-    const isMatched =
-        normalizedText.includes(normalizedExpected);
-
-    if (isMatched) {
-
-        ocrResult.innerHTML += `
-            <div class="success-box">
-                <h2>CORRECT STUD</h2>
-                <p>${expectedPart}</p>
+        // Display OCR text
+        ocrResult.innerHTML = `
+            <div style="
+                background:#2b313d;
+                padding:20px;
+                border-radius:10px;
+                margin-bottom:20px;
+                text-align:left;
+                white-space:pre-wrap;
+            ">
+                <h4>OCR TEXT</h4>
+                ${extractedText}
             </div>
         `;
 
-    } else {
+        // Normalize
+        const normalizedText =
+            extractedText
+                .replace(/\s/g, "")
+                .toUpperCase();
 
-        ocrResult.innerHTML += `
-            <div class="error-box">
-                <h2>WRONG STUD</h2>
-                <p>Expected:
-                ${expectedPart}</p>
-            </div>
-        `;
-    }
+        const normalizedExpected =
+            expectedPart
+                .replace(/\s/g, "")
+                .toUpperCase();
 
-    loadingText.innerHTML = "";
-};
+        // Compare
+        const isMatched =
+            normalizedText.includes(
+                normalizedExpected
+            );
 
-    const extractedText =
-        result.data.text;
+        loadingText.innerHTML = "";
 
-    console.log(extractedText);
+        if (isMatched) {
 
-ocrResult.innerHTML = `
-    <div style="
-        background:#2b313d;
-        padding:20px;
-        border-radius:10px;
-        margin-bottom:20px;
-        text-align:left;
-        white-space:pre-wrap;
-    ">
-        <h4>OCR TEXT</h4>
-        ${extractedText}
-    </div>
-`;
+            ocrResult.innerHTML += `
+                <div class="success-box">
+                    <h2>CORRECT STUD</h2>
+                    <p>${expectedPart}</p>
+                </div>
+            `;
 
-    // Normalize text
-    const normalizedText =
-        extractedText
-            .replace(/\s/g, "")
-            .toUpperCase();
+        } else {
 
-    const normalizedExpected =
-        expectedPart
-            .replace(/\s/g, "")
-            .toUpperCase();
-
-    // Compare
-    const isMatched =
-        normalizedText.includes(normalizedExpected);
-
-    loadingText.innerHTML = "";
-
-    if (isMatched) {
-
-        ocrResult.innerHTML += `
-            <div class="success-box">
-                <h2>CORRECT STUD</h2>
-                <p>${expectedPart}</p>
-            </div>
-        `;
-
-    } else {
-
-        ocrResult.innerHTML += `
-            <div class="error-box">
-                <h2>WRONG STUD</h2>
-                <p>Expected:
-                ${expectedPart}</p>
-            </div>
-        `;
-    }
+            ocrResult.innerHTML += `
+                <div class="error-box">
+                    <h2>WRONG STUD</h2>
+                    <p>
+                        Expected:
+                        ${expectedPart}
+                    </p>
+                </div>
+            `;
+        }
+    };
 }
