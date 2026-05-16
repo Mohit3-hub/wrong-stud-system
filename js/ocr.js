@@ -45,7 +45,7 @@ async function verifyStud() {
 
     image.onload = async function () {
 
-        // Canvas
+        // Create canvas
         const canvas =
             document.createElement("canvas");
 
@@ -55,9 +55,10 @@ async function verifyStud() {
         canvas.width = image.width;
         canvas.height = image.height;
 
+        // Draw image
         ctx.drawImage(image, 0, 0);
 
-        // OCR
+        // OCR PROCESS
         const result =
             await Tesseract.recognize(
                 canvas,
@@ -90,35 +91,41 @@ async function verifyStud() {
                 .replace(/\s/g, "")
                 .toUpperCase();
 
-        // Split lines
+        console.log(
+            "Expected:",
+            normalizedExpected
+        );
+
+        // Split OCR lines
         const lines =
             extractedText.split("\n");
 
         let detectedPart = "";
 
-        // Search keyword line
-        for (let i = 0; i < lines.length; i++) {
+        // Search line containing part number
+        for (const line of lines) {
 
-            const currentLine =
-                lines[i]
-                    .toUpperCase();
+            const upperLine =
+                line.toUpperCase();
 
-            // Find Kundenteile line
-            if (
-                currentLine.includes("KUND") ||
-                currentLine.includes("DENTE")
-            ) {
+            console.log(
+                "Checking Line:",
+                upperLine
+            );
 
-                // Take NEXT line
-                if (lines[i + 1]) {
+            // Search WHT or N number
+            const match =
+                upperLine.match(
+                    /(WHT[A-Z0-9]+|N[A-Z0-9]+)/g
+                );
 
-                    detectedPart =
-                        lines[i + 1]
-                            .replace(/\s/g, "")
-                            .toUpperCase();
+            if (match) {
 
-                    break;
-                }
+                detectedPart =
+                    match[0]
+                        .replace(/\s/g, "");
+
+                break;
             }
         }
 
@@ -147,12 +154,52 @@ async function verifyStud() {
             i++
         ) {
 
+            const detectedChar =
+                detectedPart[i];
+
+            const expectedChar =
+                normalizedExpected[i];
+
+            // Exact match
             if (
-                detectedPart[i] ===
-                normalizedExpected[i]
+                detectedChar === expectedChar
             ) {
 
                 matchedChars++;
+            }
+
+            // OCR tolerance
+            else if (
+
+                (
+                    detectedChar === "3" &&
+                    expectedChar === "8"
+                )
+
+                ||
+
+                (
+                    detectedChar === "8" &&
+                    expectedChar === "3"
+                )
+
+                ||
+
+                (
+                    detectedChar === "0" &&
+                    expectedChar === "O"
+                )
+
+                ||
+
+                (
+                    detectedChar === "O" &&
+                    expectedChar === "0"
+                )
+
+            ) {
+
+                matchedChars += 0.8;
             }
         }
 
@@ -165,8 +212,9 @@ async function verifyStud() {
             similarity
         );
 
+        // Final decision
         const isMatched =
-            similarity >= 0.5;
+            similarity >= 0.75;
 
         loadingText.innerHTML = "";
 
