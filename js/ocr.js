@@ -40,7 +40,8 @@ async function verifyStud() {
     // Create image
     const image = new Image();
 
-    image.src = URL.createObjectURL(imageFile);
+    image.src =
+        URL.createObjectURL(imageFile);
 
     image.onload = async function () {
 
@@ -68,7 +69,11 @@ async function verifyStud() {
 
         const data = imageData.data;
 
-        for (let i = 0; i < data.length; i += 4) {
+        for (
+            let i = 0;
+            i < data.length;
+            i += 4
+        ) {
 
             const avg =
                 (
@@ -82,7 +87,11 @@ async function verifyStud() {
             data[i + 2] = avg;
         }
 
-        ctx.putImageData(imageData, 0, 0);
+        ctx.putImageData(
+            imageData,
+            0,
+            0
+        );
 
         // OCR
         const result =
@@ -111,97 +120,129 @@ async function verifyStud() {
             </div>
         `;
 
-        // Normalize
         // Normalize expected part
-const normalizedExpected =
-    expectedPart
-        .replace(/\s/g, "")
-        .toUpperCase()
-        .replace(/O/g, "0")
-        .replace(/I/g, "1")
-        .replace(/S/g, "5")
-        .replace(/B/g, "8");
+        const normalizedExpected =
+            expectedPart
+                .replace(/\s/g, "")
+                .toUpperCase()
+                .replace(/O/g, "0")
+                .replace(/I/g, "1")
+                .replace(/S/g, "5")
+                .replace(/B/g, "8");
 
-// Clean OCR text
-const cleanedText =
-    extractedText.toUpperCase();
+        // Split OCR lines
+        const lines =
+            extractedText.split("\n");
 
-// Extract possible part numbers
-const detectedParts =
-    cleanedText.match(
-        /[A-Z0-9]{6,15}/g
-    ) || [];
+        console.log(lines);
 
-console.log("Detected Parts:", detectedParts);
+        let extractedPart = "";
 
-// Find closest match
-let isMatched = false;
+        // Search important line
+        for (const line of lines) {
 
-for (const part of detectedParts) {
+            const upperLine =
+                line.toUpperCase();
 
-    const normalizedPart =
-    part
-        .replace(/\s/g, "")
-        .replace(/O/g, "0")
-        .replace(/I/g, "1")
-        .replace(/S/g, "5")
-        .replace(/B/g, "8");
+            // Search keyword
+            if (
+                upperLine.includes("KUND") ||
+                upperLine.includes("DENTE") ||
+                upperLine.includes("NR")
+            ) {
 
-    // Exact match
-    if (
-        normalizedPart === normalizedExpected
-    ) {
+                // Extract possible part number
+                const match =
+                    upperLine.match(
+                        /[A-Z0-9]{6,15}/g
+                    );
 
-        isMatched = true;
-        break;
-    }
+                if (match) {
 
-    // Partial tolerance
-    let matchedChars = 0;
+                    extractedPart =
+                        match[match.length - 1];
 
-    for (
-        let i = 0;
-        i < Math.min(
-            normalizedPart.length,
-            normalizedExpected.length
+                    break;
+                }
+            }
+        }
+
+        // Normalize extracted part
+        const normalizedExtracted =
+            extractedPart
+                .replace(/\s/g, "")
+                .replace(/O/g, "0")
+                .replace(/I/g, "1")
+                .replace(/S/g, "5")
+                .replace(/B/g, "8");
+
+        console.log(
+            "Extracted:",
+            normalizedExtracted
         );
-        i++
-    ) {
 
-        if (
-            normalizedPart[i] ===
-            normalizedExpected[i]
+        console.log(
+            "Expected:",
+            normalizedExpected
+        );
+
+        // Similarity check
+        let matchedChars = 0;
+
+        for (
+            let i = 0;
+            i < Math.min(
+                normalizedExtracted.length,
+                normalizedExpected.length
+            );
+            i++
         ) {
 
-            matchedChars++;
+            if (
+                normalizedExtracted[i] ===
+                normalizedExpected[i]
+            ) {
+
+                matchedChars++;
+            }
         }
-    }
 
-    const similarity =
-        matchedChars /
-        normalizedExpected.length;
+        const similarity =
+            matchedChars /
+            normalizedExpected.length;
 
-    console.log(
-        normalizedPart,
-        similarity
-    );
+        console.log(
+            "Similarity:",
+            similarity
+        );
 
-    // 80% similarity threshold
-    if (similarity >= 0.7) {
-
-        isMatched = true;
-        break;
-    }
-}
+        // Final decision
+        const isMatched =
+            similarity >= 0.6;
 
         loadingText.innerHTML = "";
 
+        // Display result
         if (isMatched) {
 
             ocrResult.innerHTML += `
                 <div class="success-box">
                     <h2>CORRECT STUD</h2>
-                    <p>${expectedPart}</p>
+
+                    <p>
+                        Expected:
+                        ${expectedPart}
+                    </p>
+
+                    <p>
+                        Detected:
+                        ${extractedPart}
+                    </p>
+
+                    <p>
+                        Similarity:
+                        ${(similarity * 100).toFixed(0)}%
+                    </p>
                 </div>
             `;
 
@@ -210,9 +251,20 @@ for (const part of detectedParts) {
             ocrResult.innerHTML += `
                 <div class="error-box">
                     <h2>WRONG STUD</h2>
+
                     <p>
                         Expected:
                         ${expectedPart}
+                    </p>
+
+                    <p>
+                        Detected:
+                        ${extractedPart}
+                    </p>
+
+                    <p>
+                        Similarity:
+                        ${(similarity * 100).toFixed(0)}%
                     </p>
                 </div>
             `;
