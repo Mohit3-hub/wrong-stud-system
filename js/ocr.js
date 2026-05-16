@@ -93,7 +93,7 @@ async function verifyStud() {
             0
         );
 
-        // OCR
+        // OCR PROCESS
         const result =
             await Tesseract.recognize(
                 canvas,
@@ -130,29 +130,46 @@ async function verifyStud() {
                 .replace(/S/g, "5")
                 .replace(/B/g, "8");
 
-        // Split OCR text into lines
+        console.log(
+            "Expected:",
+            normalizedExpected
+        );
+
+        // Split OCR lines
         const lines =
             extractedText.split("\n");
-
-        console.log(lines);
 
         let bestMatch = "";
         let bestSimilarity = 0;
 
-        // Search all OCR lines
+        // Search all lines
         for (const line of lines) {
 
+            // Remove spaces first
             const upperLine =
-                line.toUpperCase();
+                line
+                    .toUpperCase()
+                    .replace(/\s/g, "");
+
+            console.log(
+                "Checking Line:",
+                upperLine
+            );
 
             // Extract all possible codes
             const matches =
                 upperLine.match(
-                    /[A-Z0-9]{6,15}/g
+                    /[A-Z0-9]{5,20}/g
                 );
 
             if (!matches) continue;
 
+            console.log(
+                "Matches:",
+                matches
+            );
+
+            // Compare every detected code
             for (const part of matches) {
 
                 // Normalize detected part
@@ -165,7 +182,7 @@ async function verifyStud() {
                         .replace(/B/g, "8");
 
                 console.log(
-                    "Checking:",
+                    "Normalized Part:",
                     normalizedPart
                 );
 
@@ -195,7 +212,7 @@ async function verifyStud() {
                     normalizedExpected.length;
 
                 console.log(
-                    normalizedPart,
+                    "Similarity:",
                     similarity
                 );
 
@@ -223,11 +240,11 @@ async function verifyStud() {
             bestSimilarity
         );
 
+        loadingText.innerHTML = "";
+
         // Final decision
         const isMatched =
             bestSimilarity >= 0.5;
-
-        loadingText.innerHTML = "";
 
         // SUCCESS
         if (isMatched) {
@@ -269,7 +286,7 @@ async function verifyStud() {
 
                     <p>
                         Detected:
-                        ${bestMatch}
+                        ${bestMatch || "No Match"}
                     </p>
 
                     <p>
