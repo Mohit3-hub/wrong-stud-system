@@ -130,99 +130,106 @@ async function verifyStud() {
                 .replace(/S/g, "5")
                 .replace(/B/g, "8");
 
-        // Split OCR lines
+        // Split OCR text into lines
         const lines =
             extractedText.split("\n");
 
         console.log(lines);
 
-        let extractedPart = "";
+        let bestMatch = "";
+        let bestSimilarity = 0;
 
-        // Search important line
+        // Search all OCR lines
         for (const line of lines) {
 
             const upperLine =
                 line.toUpperCase();
 
-            // Search keyword
-            if (
-                upperLine.includes("KUND") ||
-                upperLine.includes("DENTE") ||
-                upperLine.includes("NR")
-            ) {
+            // Extract all possible codes
+            const matches =
+                upperLine.match(
+                    /[A-Z0-9]{6,15}/g
+                );
 
-                // Extract possible part number
-                const match =
-                    upperLine.match(
-                        /[A-Z0-9]{6,15}/g
+            if (!matches) continue;
+
+            for (const part of matches) {
+
+                // Normalize detected part
+                const normalizedPart =
+                    part
+                        .replace(/\s/g, "")
+                        .replace(/O/g, "0")
+                        .replace(/I/g, "1")
+                        .replace(/S/g, "5")
+                        .replace(/B/g, "8");
+
+                console.log(
+                    "Checking:",
+                    normalizedPart
+                );
+
+                // Compare similarity
+                let matchedChars = 0;
+
+                for (
+                    let i = 0;
+                    i < Math.min(
+                        normalizedPart.length,
+                        normalizedExpected.length
                     );
+                    i++
+                ) {
 
-                if (match) {
+                    if (
+                        normalizedPart[i] ===
+                        normalizedExpected[i]
+                    ) {
 
-                    extractedPart =
-                        match[match.length - 1];
+                        matchedChars++;
+                    }
+                }
 
-                    break;
+                const similarity =
+                    matchedChars /
+                    normalizedExpected.length;
+
+                console.log(
+                    normalizedPart,
+                    similarity
+                );
+
+                // Save best match
+                if (
+                    similarity > bestSimilarity
+                ) {
+
+                    bestSimilarity =
+                        similarity;
+
+                    bestMatch =
+                        normalizedPart;
                 }
             }
         }
 
-        // Normalize extracted part
-        const normalizedExtracted =
-            extractedPart
-                .replace(/\s/g, "")
-                .replace(/O/g, "0")
-                .replace(/I/g, "1")
-                .replace(/S/g, "5")
-                .replace(/B/g, "8");
-
         console.log(
-            "Extracted:",
-            normalizedExtracted
+            "Best Match:",
+            bestMatch
         );
 
         console.log(
-            "Expected:",
-            normalizedExpected
-        );
-
-        // Similarity check
-        let matchedChars = 0;
-
-        for (
-            let i = 0;
-            i < Math.min(
-                normalizedExtracted.length,
-                normalizedExpected.length
-            );
-            i++
-        ) {
-
-            if (
-                normalizedExtracted[i] ===
-                normalizedExpected[i]
-            ) {
-
-                matchedChars++;
-            }
-        }
-
-        const similarity =
-            matchedChars /
-            normalizedExpected.length;
-
-        console.log(
-            "Similarity:",
-            similarity
+            "Best Similarity:",
+            bestSimilarity
         );
 
         // Final decision
         const isMatched =
-            similarity >= 0.6;
+            bestSimilarity >= 0.5;
 
         loadingText.innerHTML = "";
 
-        // Display result
+        // SUCCESS
         if (isMatched) {
 
             ocrResult.innerHTML += `
@@ -236,17 +243,20 @@ async function verifyStud() {
 
                     <p>
                         Detected:
-                        ${extractedPart}
+                        ${bestMatch}
                     </p>
 
                     <p>
                         Similarity:
-                        ${(similarity * 100).toFixed(0)}%
+                        ${(bestSimilarity * 100).toFixed(0)}%
                     </p>
                 </div>
             `;
 
-        } else {
+        }
+
+        // FAILURE
+        else {
 
             ocrResult.innerHTML += `
                 <div class="error-box">
@@ -259,12 +269,12 @@ async function verifyStud() {
 
                     <p>
                         Detected:
-                        ${extractedPart}
+                        ${bestMatch}
                     </p>
 
                     <p>
                         Similarity:
-                        ${(similarity * 100).toFixed(0)}%
+                        ${(bestSimilarity * 100).toFixed(0)}%
                     </p>
                 </div>
             `;
