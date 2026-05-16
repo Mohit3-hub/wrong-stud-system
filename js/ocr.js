@@ -112,21 +112,78 @@ async function verifyStud() {
         `;
 
         // Normalize
-        const normalizedText =
-            extractedText
-                .replace(/\s/g, "")
-                .toUpperCase();
+        // Normalize expected part
+const normalizedExpected =
+    expectedPart
+        .replace(/\s/g, "")
+        .toUpperCase();
 
-        const normalizedExpected =
-            expectedPart
-                .replace(/\s/g, "")
-                .toUpperCase();
+// Clean OCR text
+const cleanedText =
+    extractedText.toUpperCase();
 
-        // Compare
-        const isMatched =
-            normalizedText.includes(
-                normalizedExpected
-            );
+// Extract possible part numbers
+const detectedParts =
+    cleanedText.match(
+        /[A-Z0-9]{6,15}/g
+    ) || [];
+
+console.log("Detected Parts:", detectedParts);
+
+// Find closest match
+let isMatched = false;
+
+for (const part of detectedParts) {
+
+    const normalizedPart =
+        part.replace(/\s/g, "");
+
+    // Exact match
+    if (
+        normalizedPart === normalizedExpected
+    ) {
+
+        isMatched = true;
+        break;
+    }
+
+    // Partial tolerance
+    let matchedChars = 0;
+
+    for (
+        let i = 0;
+        i < Math.min(
+            normalizedPart.length,
+            normalizedExpected.length
+        );
+        i++
+    ) {
+
+        if (
+            normalizedPart[i] ===
+            normalizedExpected[i]
+        ) {
+
+            matchedChars++;
+        }
+    }
+
+    const similarity =
+        matchedChars /
+        normalizedExpected.length;
+
+    console.log(
+        normalizedPart,
+        similarity
+    );
+
+    // 80% similarity threshold
+    if (similarity >= 0.8) {
+
+        isMatched = true;
+        break;
+    }
+}
 
         loadingText.innerHTML = "";
 
