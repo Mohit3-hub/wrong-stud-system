@@ -116,7 +116,11 @@ async function verifyStud() {
 const normalizedExpected =
     expectedPart
         .replace(/\s/g, "")
-        .toUpperCase();
+        .toUpperCase()
+        .replace(/O/g, "0")
+        .replace(/I/g, "1")
+        .replace(/S/g, "5")
+        .replace(/B/g, "8");
 
 // Clean OCR text
 const cleanedText =
@@ -136,7 +140,12 @@ let isMatched = false;
 for (const part of detectedParts) {
 
     const normalizedPart =
-        part.replace(/\s/g, "");
+    part
+        .replace(/\s/g, "")
+        .replace(/O/g, "0")
+        .replace(/I/g, "1")
+        .replace(/S/g, "5")
+        .replace(/B/g, "8");
 
     // Exact match
     if (
@@ -178,7 +187,7 @@ for (const part of detectedParts) {
     );
 
     // 80% similarity threshold
-    if (similarity >= 0.8) {
+    if (similarity >= 0.7) {
 
         isMatched = true;
         break;
