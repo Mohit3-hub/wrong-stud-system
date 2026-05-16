@@ -4,11 +4,14 @@ const selectedMachine =
 const expectedPart =
     selectedMachine.expected_part;
 
-// Display expected part
+
+// SHOW EXPECTED PART
 document.getElementById("expectedPartBox").innerHTML = `
     <h3>Expected Part</h3>
     <p>${expectedPart}</p>
 `;
+
+
 
 async function verifyStud() {
 
@@ -21,40 +24,59 @@ async function verifyStud() {
     const ocrResult =
         document.getElementById("ocrResult");
 
+
+    // IMAGE CHECK
     if (!imageInput.files.length) {
 
         alert("Please upload image");
         return;
     }
 
+
     loadingText.innerHTML =
-        "Processing OCR... Please wait";
+        "Processing OCR...";
 
     ocrResult.innerHTML = "";
+
 
     const imageFile =
         imageInput.files[0];
 
+
+    // CREATE IMAGE
     const image = new Image();
 
     image.src =
         URL.createObjectURL(imageFile);
 
+
+
     image.onload = async function () {
 
+        // CREATE CANVAS
         const canvas =
             document.createElement("canvas");
 
         const ctx =
             canvas.getContext("2d");
 
-        canvas.width = image.width;
-        canvas.height = image.height;
+        canvas.width =
+            image.width;
 
-        ctx.drawImage(image, 0, 0);
+        canvas.height =
+            image.height;
+
+
+        ctx.drawImage(
+            image,
+            0,
+            0
+        );
+
 
         try {
 
+            // OCR
             const result =
                 await Tesseract.recognize(
                     canvas,
@@ -65,6 +87,7 @@ async function verifyStud() {
                 result.data.text;
 
             console.log(extractedText);
+
 
             // SHOW OCR TEXT
             ocrResult.innerHTML = `
@@ -81,67 +104,130 @@ async function verifyStud() {
                 </div>
             `;
 
+
+            // NORMALIZE OCR
+            const normalizedOCR =
+                extractedText
+                    .toUpperCase()
+                    .replace(/\s/g, "")
+                    .replace(/O/g, "0")
+                    .replace(/I/g, "1")
+                    .replace(/L/g, "1");
+
+
             // NORMALIZE EXPECTED
             const normalizedExpected =
-                normalizeText(expectedPart);
+                expectedPart
+                    .toUpperCase()
+                    .replace(/\s/g, "")
+                    .replace(/O/g, "0")
+                    .replace(/I/g, "1")
+                    .replace(/L/g, "1");
+
+
+            console.log(
+                "OCR:",
+                normalizedOCR
+            );
 
             console.log(
                 "EXPECTED:",
                 normalizedExpected
             );
 
-            // FULL OCR TEXT NORMALIZED
-            const normalizedOCR =
-                normalizeText(extractedText);
 
-            console.log(
-                "OCR NORMALIZED:",
-                normalizedOCR
-            );
-
-            // FIND WHT CODE
-            let detectedPart = "";
-
-            const whtMatch =
+            // ONLY SEARCH WHT CODE
+            const detectedMatch =
                 normalizedOCR.match(
                     /WHT[0-9]{5,10}/
                 );
 
-            if (whtMatch) {
+
+            let detectedPart = "";
+
+            if (detectedMatch) {
 
                 detectedPart =
-                    whtMatch[0];
+                    detectedMatch[0];
             }
+
 
             console.log(
                 "DETECTED:",
                 detectedPart
             );
 
-            // CALCULATE SIMILARITY
-            const similarity =
-                calculateSimilarity(
-                    normalizedExpected,
-                    detectedPart
+
+            // SIMILARITY
+            let matched = 0;
+
+            for (
+                let i = 0;
+                i < Math.min(
+                    detectedPart.length,
+                    normalizedExpected.length
                 );
+                i++
+            ) {
+
+                if (
+                    detectedPart[i] ===
+                    normalizedExpected[i]
+                ) {
+
+                    matched++;
+                }
+
+                // OCR TOLERANCE
+                else if (
+
+                    (
+                        detectedPart[i] === "3" &&
+                        normalizedExpected[i] === "8"
+                    )
+
+                    ||
+
+                    (
+                        detectedPart[i] === "8" &&
+                        normalizedExpected[i] === "3"
+                    )
+
+                ) {
+
+                    matched += 0.8;
+                }
+            }
+
+
+            const similarity =
+                matched /
+                normalizedExpected.length;
+
 
             console.log(
                 "SIMILARITY:",
                 similarity
             );
 
-            // MATCH IF 70%+
+
+            // MATCH
             const isMatched =
-                similarity >= 0.7;
+                similarity >= 0.75;
+
 
             loadingText.innerHTML = "";
+
 
             // SUCCESS
             if (isMatched) {
 
                 ocrResult.innerHTML += `
                     <div class="success-box">
-                        <h2>CORRECT STUD</h2>
+
+                        <h2>
+                            CORRECT STUD
+                        </h2>
 
                         <p>
                             Expected:
@@ -157,6 +243,7 @@ async function verifyStud() {
                             Similarity:
                             ${(similarity * 100).toFixed(0)}%
                         </p>
+
                     </div>
                 `;
             }
@@ -166,7 +253,10 @@ async function verifyStud() {
 
                 ocrResult.innerHTML += `
                     <div class="error-box">
-                        <h2>WRONG STUD</h2>
+
+                        <h2>
+                            WRONG STUD
+                        </h2>
 
                         <p>
                             Expected:
@@ -182,11 +272,14 @@ async function verifyStud() {
                             Similarity:
                             ${(similarity * 100).toFixed(0)}%
                         </p>
+
                     </div>
                 `;
             }
 
-        } catch (error) {
+        }
+
+        catch (error) {
 
             console.log(error);
 
@@ -194,72 +287,17 @@ async function verifyStud() {
 
             ocrResult.innerHTML = `
                 <div class="error-box">
-                    <h2>OCR ERROR</h2>
+
+                    <h2>
+                        OCR ERROR
+                    </h2>
+
                     <p>
                         Failed to process image
                     </p>
+
                 </div>
             `;
         }
     };
-}
-
-
-// NORMALIZE OCR TEXT
-function normalizeText(text) {
-
-    return text
-        .toUpperCase()
-        .replace(/\s/g, "")
-        .replace(/O/g, "0")
-        .replace(/I/g, "1")
-        .replace(/L/g, "1")
-        .replace(/S/g, "5")
-        .replace(/B/g, "8");
-}
-
-
-// SIMILARITY FUNCTION
-function calculateSimilarity(expected, detected) {
-
-    if (!detected) {
-        return 0;
-    }
-
-    let matched = 0;
-
-    for (
-        let i = 0;
-        i < Math.min(
-            expected.length,
-            detected.length
-        );
-        i++
-    ) {
-
-        const e = expected[i];
-        const d = detected[i];
-
-        // Exact
-        if (e === d) {
-
-            matched++;
-        }
-
-        // OCR tolerance
-        else if (
-
-            (e === "8" && d === "3") ||
-            (e === "3" && d === "8") ||
-
-            (e === "0" && d === "O") ||
-            (e === "O" && d === "0")
-
-        ) {
-
-            matched += 0.8;
-        }
-    }
-
-    return matched / expected.length;
 }
